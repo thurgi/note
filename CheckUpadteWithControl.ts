@@ -31,23 +31,34 @@ function redirect(){
 
 const localVersion = '0.1.2';
 const faireMiseAJour = new Observable(subscriber => {
-    callVersion().subscribe(value => {
-        console.log('callVersion subscribe', value)
-        if(value===localVersion){
-            updateFile().subscribe(res => {
-                if(res) {
-                    subscriber.next(true);
-                    subscriber.complete();
-                }
-            })
-        } else {
-            subscriber.next(false);
+  callVersion().subscribe({
+    next : value => {
+      console.log('callVersion subscribe', value)
+      if(value===localVersion){
+        updateFile().subscribe(res => {
+          if(res) {
+            subscriber.next(true);
             subscriber.complete();
-        }
-    })
+          }
+        })
+      } else {
+        subscriber.next(false);
+        subscriber.complete();
+      }
+    },
+    error: (e) => {
+      console.log('error callVersion', e)
+      subscriber.complete();
+    }
+  })
 })
 
-faireMiseAJour
+faireMiseAJour.pipe(tap(x => {
+    console.log('subscribe', res)
+        if(res) {
+            redirect()
+        }
+})
     .pipe(exhaustMap(getCheckLastErrorLocalUpdate))
     .pipe(
         repeat({delay:1000}),
@@ -57,8 +68,9 @@ faireMiseAJour
         })
     )
     .subscribe(res => {
-        console.log('subscribe', res)
-        if(res) {
-            redirect()
-        }
+    console.log('subscribe for fun'); 
+//         console.log('subscribe', res)
+//         if(res) {
+//             redirect()
+//         }
     })
